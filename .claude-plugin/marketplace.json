@@ -1,0 +1,14 @@
+{
+  "name": "static-checks",
+  "description": "Hooks that run a project's own static checks: lint-file on each edited file, check before Claude finishes, and a note when a project lacks the shared baseline.",
+  "owner": {
+    "name": "Ian Flanagan"
+  },
+  "plugins": [
+    {
+      "name": "static-checks",
+      "source": "./",
+      "description": "Hooks that run a project's own static checks: lint-file on each edited file, check before Claude finishes, and a note when a project lacks the shared baseline."
+    }
+  ]
+}

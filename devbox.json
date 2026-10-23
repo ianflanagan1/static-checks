@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.18.4/.schema/devbox.schema.json",
+  "packages": [
+    "shunit2@2.1.8",
+    "shellcheck@latest",
+    "jq@latest",
+    "git@latest"
+  ],
+  "shell": {
+    "scripts": {
+      "test": "sh tests/run.sh",
+      "lint": "shellcheck -x scripts/*.sh && shellcheck -x -s sh tests/run.sh && shellcheck -x tests/*_test.sh",
+      "check": "devbox run lint && devbox run test"
+    }
+  }
+}

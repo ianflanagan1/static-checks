@@ -1,0 +1,11 @@
+{
+  "name": "static-checks",
+  "description": "Hooks that run a project's own static checks: lint-file on each edited file, check before Claude finishes, and a note when a project lacks the shared baseline.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ian Flanagan"
+  },
+  "homepage": "https://github.com/ianflanagan1/static-checks",
+  "repository": "https://github.com/ianflanagan1/static-checks",
+  "license": "MIT"
+}
