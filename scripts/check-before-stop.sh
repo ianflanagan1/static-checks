@@ -14,8 +14,8 @@ max_attempts=3
 state_dir=${STATIC_CHECKS_STATE_DIR:-${TMPDIR:-/tmp}/static-checks}
 
 input=$(cat)
-cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
-continuing=$(printf '%s' "$input" | jq -r '.stop_hook_active // false')
+cwd=$(printf '%s' "$input" | jq --raw-output '.cwd // empty')
+continuing=$(printf '%s' "$input" | jq --raw-output '.stop_hook_active // false')
 
 root=$(project_root "${cwd:-$PWD}")
 [ -n "$root" ] && has_script "$root" check || exit 0
@@ -25,7 +25,7 @@ git -C "$root" rev-parse --git-dir >/dev/null 2>&1 || exit 0
 working_tree() {
     index=$(mktemp)
     cp "$(git -C "$root" rev-parse --absolute-git-dir)/index" "$index" 2>/dev/null
-    GIT_INDEX_FILE=$index git -C "$root" add -A >/dev/null 2>&1
+    GIT_INDEX_FILE=$index git -C "$root" add --all >/dev/null 2>&1
     GIT_INDEX_FILE=$index git -C "$root" write-tree
     rm -f "$index"
 }
@@ -36,7 +36,7 @@ passed_file=$state_dir/$key.passed
 attempts_file=$state_dir/$key.attempts
 
 tree=$(working_tree)
-head_tree=$(git -C "$root" rev-parse -q --verify 'HEAD^{tree}' 2>/dev/null)
+head_tree=$(git -C "$root" rev-parse --quiet --verify 'HEAD^{tree}' 2>/dev/null)
 if [ "$tree" = "$head_tree" ] || [ "$tree" = "$(cat "$passed_file" 2>/dev/null)" ]; then
     exit 0
 fi
@@ -52,10 +52,10 @@ if output=$(run_script "$root" check); then
 fi
 
 if [ "$attempts" -ge "$max_attempts" ]; then
-    jq -n --arg m "static-checks: devbox run check still fails after $max_attempts attempts to fix it." '{systemMessage: $m}'
+    jq --null-input --arg m "static-checks: devbox run check still fails after $max_attempts attempts to fix it." '{systemMessage: $m}'
     exit 0
 fi
 echo $((attempts + 1)) >"$attempts_file"
 
-reason=$(printf 'devbox run check failed. Fix what it reports, then finish:\n%s' "$(printf '%s\n' "$output" | tail -n 80)")
-jq -n --arg r "$reason" '{decision: "block", reason: $r}'
+reason=$(printf 'devbox run check failed. Fix what it reports, then finish:\n%s' "$(printf '%s\n' "$output" | tail --lines 80)")
+jq --null-input --arg r "$reason" '{decision: "block", reason: $r}'

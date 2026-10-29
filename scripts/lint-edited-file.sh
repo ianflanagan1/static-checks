@@ -7,7 +7,7 @@
 . "$(dirname "$0")/common.sh"
 require_tools "lint on edit"
 
-file=$(jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
+file=$(jq --raw-output '.tool_input.file_path // .tool_input.notebook_path // empty')
 [ -n "$file" ] && [ -f "$file" ] || exit 0
 
 root=$(project_root "$(dirname "$file")")

@@ -16,14 +16,14 @@ project_root() {
 # has_script root name: whether root's devbox.json defines the script. devbox.json may hold comments, which jq
 # can't read, so a file jq rejects counts as having no scripts.
 has_script() {
-    jq -e --arg s "$2" '.shell.scripts[$s] != null' "$1/devbox.json" >/dev/null 2>&1
+    jq --exit-status --arg s "$2" '.shell.scripts[$s] != null' "$1/devbox.json" >/dev/null 2>&1
 }
 
 # run_script root name args...: runs a devbox script from the project root, dropping devbox's own "Info:" lines.
 run_script() {
     root=$1
     shift
-    (cd "$root" && devbox run "$@" 2>&1) | grep -v '^Info: '
+    (cd "$root" && devbox run "$@" 2>&1) | grep --invert-match '^Info: '
     return "${PIPESTATUS[0]}"
 }
 

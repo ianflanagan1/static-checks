@@ -8,7 +8,7 @@
 #
 # Exit status: 0 all passed, 1 any failed, 2 shunit2 not found.
 
-set -u
+set -o nounset
 
 dir=$(cd "$(dirname "$0")" && pwd)
 SHUNIT2=${SHUNIT2:-$(command -v shunit2 || true)}

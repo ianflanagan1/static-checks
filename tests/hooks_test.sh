@@ -7,7 +7,7 @@ stop_hook=$root/scripts/check-before-stop.sh
 start_hook=$root/scripts/baseline-reminder.sh
 
 setUp() {
-    work=$(mktemp -d)
+    work=$(mktemp --directory)
     export STATIC_CHECKS_STATE_DIR="$work/state"
     project=$work/project
     mkdir -p "$project/src"
@@ -27,21 +27,21 @@ devbox_scripts() {
 committed() {
     echo .devbox/ >"$project/.gitignore"
     (cd "$project" && devbox install >/dev/null 2>&1)
-    git -C "$project" init -q
-    git -C "$project" add -A
-    git -C "$project" -c user.name=t -c user.email=t@t commit -qm init
+    git -C "$project" init --quiet
+    git -C "$project" add --all
+    git -C "$project" -c user.name=t -c user.email=t@t commit --quiet --message init
 }
 
 edit() {
-    jq -n --arg f "$1" '{hook_event_name:"PostToolUse",tool_name:"Edit",tool_input:{file_path:$f}}' | bash "$lint_hook"
+    jq --null-input --arg f "$1" '{hook_event_name:"PostToolUse",tool_name:"Edit",tool_input:{file_path:$f}}' | bash "$lint_hook"
 }
 
 stop() {
-    jq -n --arg d "$project" --argjson a "${1:-false}" '{hook_event_name:"Stop",cwd:$d,stop_hook_active:$a}' | bash "$stop_hook"
+    jq --null-input --arg d "$project" --argjson a "${1:-false}" '{hook_event_name:"Stop",cwd:$d,stop_hook_active:$a}' | bash "$stop_hook"
 }
 
 start() {
-    jq -n --arg d "$project" '{hook_event_name:"SessionStart",cwd:$d}' | bash "$start_hook"
+    jq --null-input --arg d "$project" '{hook_event_name:"SessionStart",cwd:$d}' | bash "$start_hook"
 }
 
 # --- lint on edit
@@ -84,8 +84,8 @@ test_a_failing_check_sends_claude_back_with_its_output() {
     committed
     echo change >"$project/src/new.ts"
     out=$(stop)
-    assertEquals block "$(printf '%s' "$out" | jq -r .decision)"
-    assertContains "$(printf '%s' "$out" | jq -r .reason)" '3 tests failed'
+    assertEquals block "$(printf '%s' "$out" | jq --raw-output .decision)"
+    assertContains "$(printf '%s' "$out" | jq --raw-output .reason)" '3 tests failed'
 }
 
 test_a_passing_check_lets_claude_finish() {
@@ -130,8 +130,8 @@ test_a_check_claude_cannot_fix_stops_blocking_and_warns_the_user() {
     stop true >/dev/null
     stop true >/dev/null
     out=$(stop true)
-    assertEquals null "$(printf '%s' "$out" | jq -r .decision)"
-    assertContains "$(printf '%s' "$out" | jq -r .systemMessage)" 'still fails after 3 attempts'
+    assertEquals null "$(printf '%s' "$out" | jq --raw-output .decision)"
+    assertContains "$(printf '%s' "$out" | jq --raw-output .systemMessage)" 'still fails after 3 attempts'
 }
 
 test_a_new_turn_resets_the_attempts() {
@@ -142,7 +142,7 @@ test_a_new_turn_resets_the_attempts() {
     stop true >/dev/null
     stop true >/dev/null
     stop true >/dev/null
-    assertEquals block "$(stop | jq -r .decision)"
+    assertEquals block "$(stop | jq --raw-output .decision)"
 }
 
 test_a_project_without_a_check_script_is_left_alone() {
