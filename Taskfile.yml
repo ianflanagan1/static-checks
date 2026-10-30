@@ -1,0 +1,28 @@
+version: '3'
+
+tasks:
+  check:
+    desc: ShellCheck, then the tests
+    cmds:
+      - task: lint
+      - task: test
+
+  lint:
+    desc: ShellCheck every shell script
+    cmds:
+      - shellcheck --external-sources scripts/*.sh
+      - shellcheck --external-sources tests/*_test.sh
+
+  test:
+    desc: Run the shunit2 tests, or just the test files given after --
+    vars:
+      FILES: '{{if .CLI_ARGS_LIST}}{{range .CLI_ARGS_LIST}}{{shellQuote .}} {{end}}{{else}}tests/*_test.sh{{end}}'
+    cmds:
+      # Every file runs, so one failure doesn't hide the rest.
+      - |
+        failed=0
+        for t in {{.FILES}}; do
+          echo "== $(basename "$t")"
+          sh "$t" || failed=1
+        done
+        exit "$failed"

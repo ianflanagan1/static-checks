@@ -4,13 +4,7 @@
     "shunit2@2.1.8",
     "shellcheck@latest",
     "jq@latest",
-    "git@latest"
-  ],
-  "shell": {
-    "scripts": {
-      "test": "sh tests/run.sh",
-      "lint": "shellcheck --external-sources scripts/*.sh && shellcheck --external-sources --shell sh tests/run.sh && shellcheck --external-sources tests/*_test.sh",
-      "check": "devbox run lint && devbox run test"
-    }
-  }
+    "git@latest",
+    "go-task@3.53.1"
+  ]
 }

@@ -2,22 +2,27 @@
 
 A Claude Code plugin that runs a project's own static checks while Claude works, so a problem comes back to Claude one edit after it's made rather than in review, and a rule enforced by a tool doesn't also need spelling out in Claude's instructions.
 
-It runs only what the project defines, as [devbox](https://www.jetify.com/devbox) scripts, so it works for any language:
+It runs only what the project defines, as [Task](https://taskfile.dev) tasks in the `Taskfile.yml` beside its `devbox.json`, run through [devbox](https://www.jetify.com/devbox), so it works for any language:
 
 | Hook | When | What |
 |---|---|---|
-| `PostToolUse` | after each Edit, Write, MultiEdit or NotebookEdit | Runs `devbox run lint-file <file>` in the project holding the file. On failure, Claude is shown the output (exit 2) and fixes it before going on. |
-| `Stop` | when Claude is about to finish a turn | Runs `devbox run check`. On failure, Claude is sent back with the last 80 lines of output. |
+| `PostToolUse` | after each Edit, Write, MultiEdit or NotebookEdit | Runs `devbox run -- task lint-file -- <file>` in the project holding the file. On failure, Claude is shown the output (exit 2) and fixes it before going on. |
+| `Stop` | when Claude is about to finish a turn | Runs `devbox run -- task check`. On failure, Claude is sent back with the last 80 lines of output. |
 | `SessionStart` | at the start of a session | Tells Claude when the project is missing the shared baseline ([`@ianflanagan1/ts-baseline`](https://github.com/ianflanagan1/ts-baseline) for TypeScript), so it can offer to add it. It never changes the project. |
 
-A project without a `lint-file` or `check` script is left alone by that hook.
+A project without a `lint-file` or `check` task is left alone by that hook. Until every project has moved to a Taskfile, a project without one still has its `lint-file` and `check` devbox scripts run instead.
 
-## The scripts a project defines
+## The tasks a project defines
 
-- `lint-file`: formats, fixes and lints the files given as arguments (devbox passes them as `"$@"`), exiting non-zero on what it couldn't fix. Keep it fast, since it runs on every edit. For TypeScript:
+- `lint-file`: formats, fixes and lints the files given after `--`, exiting non-zero on what it couldn't fix. Task passes them as `CLI_ARGS_LIST`; quote each one, since a path can hold spaces. Keep it fast, since it runs on every edit. For TypeScript:
 
-  ```json
-  "lint-file": "pnpm exec prettier --write --ignore-unknown --log-level warn \"$@\" && pnpm exec eslint --fix --max-warnings 0 --no-warn-ignored \"$@\""
+  ```yaml
+  lint-file:
+    vars:
+      FILES: '{{range .CLI_ARGS_LIST}}{{shellQuote .}} {{end}}'
+    cmds:
+      - pnpm exec prettier --write --ignore-unknown --log-level warn {{.FILES}}
+      - pnpm exec eslint --fix --max-warnings 0 --no-warn-ignored {{.FILES}}
   ```
 
 - `check`: everything: formatting, type checks, linters, tests. The same task CI runs.
@@ -46,5 +51,5 @@ It needs `jq`, `git` and `devbox` on `PATH`. Without them the hooks report an er
 ## Development
 
 ```sh
-devbox run check   # shellcheck, then the shunit2 tests against throwaway projects
+devbox run -- task check   # shellcheck, then the shunit2 tests against throwaway projects
 ```

@@ -20,8 +20,8 @@ fi
 
 if [ ${#notes[@]} -gt 0 ]; then
     root=$(project_root "$dir")
-    if [ -z "$root" ] || ! has_script "$root" lint-file; then
-        notes+=("It has no \`lint-file\` devbox script, so files are not linted as they are edited.")
+    if [ -z "$root" ] || [ -z "$(task_kind "$root" lint-file)" ]; then
+        notes+=("It has no \`lint-file\` task, so files are not linted as they are edited.")
     fi
     printf 'static-checks: this project is missing the shared static checks.\n'
     printf -- '- %s\n' "${notes[@]}"
